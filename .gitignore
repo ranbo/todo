@@ -1,0 +1,10 @@
+# Per-deployment settings (copy the *.example files)
+public/firebase-config.js
+deploy.config
+
+# Editor / OS files
+.DS_Store
+.idea/
+.mvn/
+.vscode/
+node_modules/

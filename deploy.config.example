@@ -1,0 +1,5 @@
+# Copy to deploy.config (not committed) and set where ./deploy.sh publishes public/.
+# DEPLOY_TARGET: a Google Cloud Storage location that a website serves, e.g. gs://example.com/todo
+# SITE_URL:      the address it is served at (only used for the message at the end)
+DEPLOY_TARGET=gs://example.com/todo
+SITE_URL=https://example.com/todo/

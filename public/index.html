@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ToDo</title>
+  <meta name="description" content="Personal to-do lists, synced through Firebase.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ToDo">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="loading" class="center-screen">Loading…</div>
+
+  <div id="signin" class="center-screen" hidden>
+    <img src="icon.svg" alt="" width="64" height="64">
+    <h1>ToDo</h1>
+    <button id="signinBtn" class="primary" type="button">Sign in with Google</button>
+    <p id="signinError" class="error" hidden></p>
+  </div>
+
+  <div id="app" hidden>
+    <header class="top">
+    <div class="toolbar" role="toolbar" aria-label="Actions">
+      <button class="tb" id="tbNew" type="button" title="New task below the selection (↩)" aria-label="New task">
+        <svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></button>
+      <span class="sep"></span>
+      <button class="tb" id="tbCopy" type="button" title="Copy (⌘C)" aria-label="Copy">
+        <svg viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-6A1.5 1.5 0 0 0 4 4.5v8A1.5 1.5 0 0 0 5.5 14H7"/></svg></button>
+      <button class="tb" id="tbCut" type="button" title="Cut (⌘X)" aria-label="Cut">
+        <svg viewBox="0 0 20 20"><circle cx="5.5" cy="14.5" r="2.5"/><circle cx="14.5" cy="14.5" r="2.5"/><path d="M7.3 12.7L15 3M12.7 12.7L5 3"/></svg></button>
+      <button class="tb" id="tbPaste" type="button" title="Paste (⌘V)" aria-label="Paste">
+        <svg viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="13.5" rx="1.5"/><path d="M7.5 4V3h5v1.6h-5z"/><path d="M7 9h6M7 12h6"/></svg></button>
+      <button class="tb" id="tbDelete" type="button" title="Delete (⌫)" aria-label="Delete">
+        <svg viewBox="0 0 20 20"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 11h7.4l.8-11M8.5 8.5v5M11.5 8.5v5"/></svg></button>
+      <span class="sep"></span>
+      <button class="tb" id="tbUndo" type="button" title="Undo (⌘Z)" aria-label="Undo">
+        <svg viewBox="0 0 20 20"><path d="M7.5 4.5L4 8l3.5 3.5"/><path d="M4.5 8H12a4 4 0 0 1 0 8H9"/></svg></button>
+      <button class="tb" id="tbRedo" type="button" title="Redo (⇧⌘Z)" aria-label="Redo">
+        <svg viewBox="0 0 20 20"><path d="M12.5 4.5L16 8l-3.5 3.5"/><path d="M15.5 8H8a4 4 0 0 0 0 8h3"/></svg></button>
+      <button class="tb" id="tbHistory" type="button" title="Show task history (completed tasks and dates)" aria-label="Show task history" aria-pressed="false">
+        <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6v4.2l2.8 1.8"/></svg></button>
+      <button class="tb" id="tbJournal" type="button" title="See Journal (completed tasks by day)" aria-label="See Journal" aria-pressed="false">
+        <svg viewBox="0 0 20 20"><path d="M5 3.5h9.5a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 3.5z"/><path d="M3.5 14.5A1.5 1.5 0 0 1 5 13h10.5M7 7h5M7 9.5h3.5"/></svg></button>
+      <span class="sep"></span>
+      <button class="tb" id="menuBtn" type="button" title="More" aria-label="More" aria-haspopup="menu">
+        <svg viewBox="0 0 20 20" class="filled"><circle cx="4.5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15.5" cy="10" r="1.5"/></svg></button>
+      <span id="sync" class="sync" aria-live="polite"></span>
+    </div>
+    <div class="date-head" aria-hidden="true"><span>Created</span><span>Started</span><span>Completed</span></div>
+    </header>
+
+    <p id="banner" class="banner" hidden></p>
+
+    <main id="main">
+      <ul id="tree" class="tree" aria-label="Tasks" aria-multiselectable="true"></ul>
+      <p id="empty" class="empty" hidden>Nothing here. Use + to add a task.</p>
+      <section id="journal" class="journal" aria-label="Journal of completed tasks" hidden></section>
+    </main>
+  </div>
+
+  <div id="menu" class="menu" role="menu" hidden></div>
+  <div id="ghost" class="ghost" hidden></div>
+  <div id="dropLine" class="drop-line" hidden></div>
+</body>
+</html>
