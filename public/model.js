@@ -155,12 +155,22 @@ export function subtreeIds(index, id) {
 /** Flattened, display-ordered rows under rootId, honoring collapse and a `visible(node)` filter. */
 export function visibleRows(index, rootId, { visible = () => true } = {}) {
   const out = [];
+  // Bold (top-priority) tasks stay in view under a collapsed row, as long as that row itself is showing:
+  // they show through collapsed tasks and their own collapsed category, but not through a subcategory.
+  const peek = (pid, depth) => {
+    for (const n of index.children(pid)) {
+      if (!visible(n) || n.type === 'category') continue;
+      if (n.bold) out.push({ node: n, depth, hasKids: false, peek: true });
+      peek(n.id, n.bold ? depth + 1 : depth);
+    }
+  };
   (function walk(pid, depth) {
     for (const n of index.children(pid)) {
       if (!visible(n)) continue;
       const kids = index.children(n.id).filter(visible);
       out.push({ node: n, depth, hasKids: kids.length > 0 });
       if (kids.length && !n.collapsed) walk(n.id, depth + 1);
+      else if (kids.length) peek(n.id, depth + 1);
     }
   })(rootId, 0);
   return out;

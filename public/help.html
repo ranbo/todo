@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ToDo Help</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #f7f8fa; --surface: #fff; --text: #1d2026; --muted: #737a86; --faint: #d9dce1; --accent: #2563eb;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #17191d; --surface: #202328; --text: #e6e8eb; --muted: #959ca6; --faint: #3a3f47; --accent: #6ea0ff;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #17191d; --surface: #202328; --text: #e6e8eb; --muted: #959ca6; --faint: #3a3f47; --accent: #6ea0ff;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 14px 16px 28px; background: var(--bg); color: var(--text);
+      font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { font-size: 17px; margin: 0 0 4px; }
+    h2 { font-size: 13px; margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    p { margin: 4px 0; }
+    ul { margin: 4px 0; padding-left: 18px; }
+    li { margin: 3px 0; }
+    table { border-collapse: collapse; width: 100%; background: var(--surface); border: 1px solid var(--faint); border-radius: 6px; }
+    td { padding: 4px 8px; border-top: 1px solid var(--faint); vertical-align: top; }
+    tr:first-child td { border-top: none; }
+    td:first-child { white-space: nowrap; width: 1%; }
+    kbd {
+      display: inline-block; min-width: 1.6em; padding: 0 5px; text-align: center;
+      font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+      border: 1px solid var(--faint); border-bottom-width: 2px; border-radius: 4px; background: var(--bg);
+    }
+    .mark { display: inline-block; width: 13px; height: 13px; border: 1.5px solid var(--muted); border-radius: 3px;
+      vertical-align: -2px; position: relative; }
+    .mark svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: currentColor; stroke-width: 2; fill: none; }
+  </style>
+</head>
+<body>
+  <h1>ToDo</h1>
+  <p>One list of categories (Work, Home, Church, …) and tasks, nested as deep as you like. Changes save and sync on their own.</p>
+
+  <h2>Tasks</h2>
+  <ul>
+    <li><b>Checkbox:</b> click for done
+      (<span class="mark"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>), click again for to do.
+      Shift-click (or press and hold on a phone) for in progress
+      (<span class="mark"><svg viewBox="0 0 12 12"><path d="M3 9l6-6"/></svg></span>).</li>
+    <li>A task shows <b>in progress</b> by itself when any of its subtasks is started or done, until you mark it done.</li>
+    <li><b>Bold</b> (<kbd>⌘B</kbd>) marks a task as top priority. It stays in view even when its category is
+      collapsed (but not when the category above that is collapsed).</li>
+    <li><b>Descriptions:</b> select a task and click the <b>+</b> to its right. The <b>▸</b> next to a name shows or
+      hides it; click in it to edit. <kbd>⌘B</kbd> <kbd>⌘I</kbd> <kbd>⌘U</kbd> format text there, and typing
+      “- ” starts a bulleted list.</li>
+    <li>Tasks checked off stay in view until midnight. <b>Show task history</b> (the clock button) shows them all, with
+      Created / Started / Completed dates you can click to change. <b>See Journal</b> (the book button) lists finished
+      tasks by day.</li>
+    <li><b>Drag</b> rows to reorder (drop on a row's top or bottom edge) or to move them inside another row (drop on
+      its middle). On a phone, press and hold a row to pick it up.</li>
+  </ul>
+
+  <h2>Typing names (like a checklist in a document)</h2>
+  <table>
+    <tr><td><kbd>Return</kbd></td><td>Save and start the next task below. At the very start of a name, opens a new
+      task above it instead. On an empty task, outdents it or ends the list.</td></tr>
+    <tr><td><kbd>⇧Return</kbd></td><td>With the cursor in the middle of a name, splits it: the rest becomes the next
+      task. At the end of a name, starts a subtask.</td></tr>
+    <tr><td><kbd>Tab</kbd> <kbd>⇧Tab</kbd></td><td>Indent / outdent</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Previous / next task</td></tr>
+    <tr><td><kbd>⌫</kbd></td><td>On an empty task, removes it</td></tr>
+    <tr><td><kbd>⌘B</kbd></td><td>Top priority (bold) on / off</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Finish (or click elsewhere). Empty tasks disappear; spaces at either end of a name
+      are trimmed.</td></tr>
+  </table>
+
+  <h2>With rows selected</h2>
+  <table>
+    <tr><td>Click</td><td>Select · <kbd>⌘</kbd>-click adds or removes · Shift-click selects a range · click empty space
+      to clear</td></tr>
+    <tr><td><kbd>Return</kbd> <kbd>⇧Return</kbd></td><td>New task below / new subtask</td></tr>
+    <tr><td><kbd>F2</kbd></td><td>Rename (or click the selected name again, or double-click it)</td></tr>
+    <tr><td><kbd>Space</kbd> <kbd>⇧Space</kbd></td><td>Done / in progress</td></tr>
+    <tr><td><kbd>⌘B</kbd></td><td>Top priority (bold) on / off</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Select previous / next · with Shift, extend the selection</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Collapse / expand</td></tr>
+    <tr><td><kbd>Tab</kbd> <kbd>⇧Tab</kbd></td><td>Indent / outdent</td></tr>
+    <tr><td><kbd>⌘↑</kbd> <kbd>⌘↓</kbd></td><td>Move up / down</td></tr>
+    <tr><td><kbd>⌘C</kbd> <kbd>⌘X</kbd> <kbd>⌘V</kbd></td><td>Copy (as an indented outline) / cut / paste</td></tr>
+    <tr><td><kbd>⌫</kbd></td><td>Delete</td></tr>
+    <tr><td><kbd>⌘Z</kbd> <kbd>⇧⌘Z</kbd></td><td>Undo / redo (until the page is reloaded)</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Clear the selection, or leave the Journal</td></tr>
+    <tr><td><kbd>?</kbd></td><td>This help</td></tr>
+  </table>
+
+  <h2>Installing</h2>
+  <p>iPhone: open the page in Safari → Share → <b>Add to Home Screen</b>. Mac: in Chrome, ⋮ → Cast, save and share →
+    <b>Install page as app</b>; in Safari, File → <b>Add to Dock</b>.</p>
+
+  <script>
+    // Show Ctrl instead of ⌘ on Windows and Linux.
+    if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
+      for (const k of document.querySelectorAll('kbd')) k.textContent = k.textContent.replace('⌘', 'Ctrl+').replace('⇧', 'Shift+');
+    }
+  </script>
+</body>
+</html>

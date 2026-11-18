@@ -1,9 +1,9 @@
 // Lets the app open with no connection. Your own files are fetched fresh when online (cache as fallback);
 // the versioned Firebase library files never change, so they come from the cache first.
-const CACHE = 'todo-v8';
+const CACHE = 'todo-v9';
 const SHELL = [
   './', './index.html', './style.css', './app.js', './model.js', './store.js', './richtext.js',
-  './firebase-backend.js', './firebase-config.js', './manifest.webmanifest', './icon.svg',
+  './firebase-backend.js', './firebase-config.js', './manifest.webmanifest', './icon.svg', './help.html',
 ];
 
 self.addEventListener('install', (e) => {

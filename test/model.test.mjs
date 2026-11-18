@@ -86,6 +86,20 @@ test('visibleRows honors collapse and a visibility filter', () => {
   assert.deepEqual(ids(visibleRows(index, 'w')), ['a@0+', 'a1@1', 'b@0', 'c@0']);
 });
 
+test('bold tasks show under a collapsed parent or category, but not a collapsed grandparent category', () => {
+  const { index } = setup([
+    ctx('w'), cat('h', 'w', { collapsed: true }),
+    task('p', 'h', TODO, { collapsed: true }), task('t', 'p', TODO, { bold: true }), task('u', 't', TODO, { bold: true }),
+    task('q', 'h'), cat('sub', 'h'), task('s', 'sub', TODO, { bold: true }),
+  ]);
+  const ids = (rows) => rows.map((r) => `${r.node.id}@${r.depth}${r.peek ? '*' : ''}`);
+  assert.deepEqual(ids(visibleRows(index, null)), ['w@0', 'h@1', 't@2*', 'u@3*']);
+  index.byId.get('h').collapsed = false;
+  assert.deepEqual(ids(visibleRows(index, null)), ['w@0', 'h@1', 'p@2', 't@3*', 'u@4*', 'q@2', 'sub@2', 's@3']);
+  index.byId.get('w').collapsed = true;
+  assert.deepEqual(ids(visibleRows(index, null)), ['w@0']);
+});
+
 test('childProgress counts direct child tasks', () => {
   const { index, effective } = setup([ctx('w'), task('a', 'w'), task('a1', 'a', DONE), task('a2', 'a'), cat('c', 'a')]);
   assert.deepEqual(childProgress(index, index.byId.get('a'), effective), { total: 2, done: 1 });

@@ -125,6 +125,7 @@ main { padding: 3px 2px 40vh; min-height: calc(100vh - 34px); }
   padding: calc((var(--row-h) - 1.35em) / 2) 3px; min-width: 0; overflow-wrap: anywhere;
 }
 .title.untitled { color: var(--muted); font-style: italic; }
+.row.bold > .line .title, .row.bold > .line .title-edit { font-weight: 700; }
 .st-done > .line .title { text-decoration: line-through; color: var(--muted); }
 .title-edit {
   /* Edits in place: same font and spacing as the name, so typing looks like typing in a document. */

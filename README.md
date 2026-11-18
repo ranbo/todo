@@ -12,10 +12,15 @@ data syncs across devices through your own Firebase Firestore project, protected
 - **Select:** click a row. ⌘-click adds/removes rows, Shift-click selects a range, click empty space to clear.
 - **Adding tasks (like a checklist in Docs):** select a row and press **Return** for a new task below it (inside, for a
   category or an open parent), or **Shift-Return** for a subtask. While typing a name: Return saves it and starts the
-  next one · Return on an empty task outdents it, or ends the list · Tab / Shift-Tab indent / outdent · ↑/↓ move to the
-  previous/next task · Backspace on an empty task removes it · Esc or clicking away finishes (empty tasks disappear).
+  next one (at the very start of a name, it opens a new task above instead) · Shift-Return in the middle of a name
+  splits it, the rest becoming the next task (at the end, it starts a subtask) · Return on an empty task outdents it,
+  or ends the list · Tab / Shift-Tab indent / outdent · ↑/↓ move to the previous/next task · Backspace on an empty task
+  removes it · Esc or clicking away finishes (empty tasks disappear; spaces at either end of a name are trimmed).
+- **Top priority:** ⌘B makes a task bold. A bold task stays in view when its category (or a parent task) is collapsed,
+  though not when the category above that is collapsed.
 - **Rename:** click the name of the selected row again, double-click it, or press F2.
-- **Toolbar:** + new task · copy · cut · paste · delete · undo · redo · ⋯ more.
+- **Toolbar:** + new task · copy · cut · paste · delete · undo · redo · history · journal · ? help (opens instructions
+  and keyboard shortcuts in a window of their own; also the ? key) · ⋯ more.
 - **Drag** rows to reorder (drop on the top or bottom edge of a row) or to move them inside another row (drop on its
   middle). Dragging a selected row drags the whole selection. On a phone, press and hold a row to pick it up.
 - **Description:** select a task and click the **+** to its right. ⌘B / ⌘I / ⌘U for bold/italic/underline;
@@ -31,7 +36,7 @@ data syncs across devices through your own Firebase Firestore project, protected
   states and descriptions; pasting other text makes one task per line (indentation nests; `[x]` marks done).
 - **Keyboard:** ↑/↓ select (Shift extends) · ←/→ collapse/expand · Space done, Shift-Space in progress ·
   Return / Shift-Return new task / subtask · F2 rename · Tab / Shift-Tab indent / outdent ·
-  ⌘↑/⌘↓ move · ⌫ delete · ⌘C/⌘X/⌘V · ⌘Z / ⇧⌘Z undo/redo (also in ⋯ → Keyboard shortcuts).
+  ⌘↑/⌘↓ move · ⌘B top priority · ⌫ delete · ⌘C/⌘X/⌘V · ⌘Z / ⇧⌘Z undo/redo · ? help.
 - On iPhone: open the page in Safari → Share → **Add to Home Screen**. On a Mac in Chrome: ⋮ → Cast, save and share →
   **Install page as app**; in Safari: File → **Add to Dock**.
 
@@ -77,7 +82,7 @@ After changing files, bump `CACHE` in `public/sw.js` (e.g. `todo-v9`) so install
 
 `users/{uid}/nodes/{nodeId}` — one document per category or task:
 `{ parentId (null at the top), type: 'category'|'task', title, state: 'todo'|'in_progress'|'done', order,
-collapsed, desc (sanitized HTML), descOpen, createdAt, startedAt, completedAt, deletedAt }`; dates are millisecond
+collapsed, bold (top priority), desc (sanitized HTML), descOpen, createdAt, startedAt, completedAt, deletedAt }`; dates are millisecond
 timestamps or null. Checking a task off sets `completedAt` (unchecking clears it); starting it sets `startedAt`.
 Older top-level `type: 'context'` items become categories, and items from before dates were tracked get their dates
 filled in from their last-saved time, automatically.

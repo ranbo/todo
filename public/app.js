@@ -408,14 +408,15 @@ function createRow(id) {
   return { li, line, caret, check, title, descBtn, progress, addDesc, dateCells, input: null, desc: null, descWrap: null };
 }
 
-function updateRow(rec, { node: n, depth, hasKids }) {
+function updateRow(rec, { node: n, depth, hasKids, peek }) {
   const id = n.id;
   const st = resolver.effective(n);
   const isSel = selected.has(id);
   const hasDesc = !htmlIsEmpty(n.desc);
   const showDesc = (hasDesc && n.descOpen) || descFocusId === id;
   rec.li.className = ['row', n.type, st && `st-${st}`, isSel && 'selected', hasKids && n.collapsed && 'collapsed',
-    drag?.moving?.has(id) && 'drag-src'].filter(Boolean).join(' ');
+    drag?.moving?.has(id) && 'drag-src', n.type === 'task' && n.bold && 'bold', peek && 'peek']
+    .filter(Boolean).join(' ');
   rec.li.setAttribute('aria-selected', String(isSel));
   rec.li.style.setProperty('--depth', depth);
 
@@ -687,7 +688,7 @@ function toggleCollapsed(id, value) {
 }
 
 // ---------------------------------------------------------------- title editing
-function startEdit(id, { isNew = false } = {}) {
+function startEdit(id, { isNew = false, caret = 'end' } = {}) {
   if (!node(id)) return;
   if (editing && editing.id !== id) commitEdit();
   editing = { id, isNew };
@@ -696,7 +697,8 @@ function startEdit(id, { isNew = false } = {}) {
   const inp = rowEls.get(id)?.input;
   if (inp) {
     inp.focus();
-    inp.setSelectionRange(inp.value.length, inp.value.length);
+    const pos = caret === 'start' ? 0 : inp.value.length;
+    inp.setSelectionRange(pos, pos);
     inp.scrollIntoView({ block: 'nearest' });
   }
 }
@@ -758,12 +760,31 @@ function onEditKey(e, id, input) {
         else commitEdit();
         return;
       }
+      const { selectionStart: from, selectionEnd: to, value } = input;
+      if (!e.shiftKey && from === 0 && to === 0) {
+        // Return at the very start of a name opens a new row above it, as in a document.
+        commitEdit();
+        if (node(id)) createItem({ type: n.type, parentId: n.parentId ?? null, afterRef: siblingBefore(id) });
+        return;
+      }
+      if (e.shiftKey && value.slice(0, from).trim() && value.slice(to).trim()) {
+        splitItem(id, value.slice(0, from), value.slice(to));
+        return;
+      }
       commitEdit();
       if (!node(id)) return;
       if (e.shiftKey) createItem({ type: 'task', parentId: id, afterRef: END });
       else createItem({ type: 'task', ...placeBelow(id) });
       return;
     }
+    case 'b': case 'B':
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        saveTitleNow();
+        toggleBold([id]);
+        keepEditing();
+      }
+      return;
     case 'Escape':
       e.preventDefault();
       commitEdit();
@@ -808,6 +829,40 @@ function placeBelow(id) {
   const openKids = !n.collapsed && index.children(id).some(isShown);
   if (n.type === 'category' || openKids) return { parentId: id, afterRef: START };
   return { parentId: n.parentId ?? null, afterRef: id };
+}
+
+/** The sibling just before id (START if it's the first), for inserting a new item above it. */
+function siblingBefore(id) {
+  const n = node(id);
+  const sibs = index.children(n.parentId ?? null);
+  const i = sibs.findIndex((s) => s.id === id);
+  return i > 0 ? sibs[i - 1].id : START;
+}
+
+/** Shift-Return inside a name: the text after the cursor becomes the next item, and typing carries on there. */
+function splitItem(id, before, after) {
+  const n = node(id);
+  if (!n || !store) return;
+  editing = null; // the name is saved below, so the editor mustn't save the whole text again
+  const where = n.type === 'task' ? placeBelow(id) : { parentId: n.parentId ?? null, afterRef: id };
+  const nid = store.newId();
+  const [order] = placeOrders(where.parentId, where.afterRef, new Set(), 1);
+  const data = { parentId: where.parentId, type: n.type, title: after.trim(), order, collapsed: false, createdAt: Date.now() };
+  if (n.type === 'task') data.state = TODO;
+  exec([
+    { type: 'update', id, patch: { title: before.trim() } },
+    { type: 'set', id: nid, data },
+    expandOp(where.parentId),
+  ], { key: `new:${nid}` });
+  startEdit(nid, { isNew: true, caret: 'start' });
+}
+
+/** ⌘B: mark tasks bold (top priority, kept in view when their category is collapsed), or unmark them. */
+function toggleBold(ids) {
+  const tasks = ids.map(node).filter((n) => n?.type === 'task');
+  if (!tasks.length) return;
+  const bold = !tasks[0].bold;
+  exec(tasks.map((n) => ({ type: 'update', id: n.id, patch: { bold } })));
 }
 
 // ---------------------------------------------------------------- structure edits
@@ -1320,6 +1375,8 @@ function selectionMenuItems() {
     { label: 'New subcategory', disabled: !one, action: () => createItem({ type: 'category', parentId: one.id, afterRef: END }) },
     { label: one && !htmlIsEmpty(one.desc) ? 'Edit description' : 'Add description', disabled: !one,
       action: () => openDescription(one.id) },
+    { label: 'Top priority (bold)', key: `${KEY.mod}B`, checked: !!(first?.type === 'task' && first.bold),
+      disabled: !tops.some((id) => node(id)?.type === 'task'), action: () => toggleBold(tops) },
     { label: first?.type === 'category' ? 'Change to task' : 'Change to category', disabled: none, action: convertSelection },
     '-',
     { label: 'Indent', key: 'Tab', disabled: none, action: indentSelection },
@@ -1351,7 +1408,7 @@ function mainMenuItems() {
     { label: 'Show task history', checked: showHistory, action: toggleHistory },
     { label: journalOpen ? 'Back to list' : 'See Journal', action: () => toggleJournal() },
     '-',
-    { label: 'Keyboard shortcuts', action: showShortcuts });
+    { label: 'Help & keyboard shortcuts', key: '?', action: openHelp });
   if (backend && user) items.push({ label: 'Sign out', action: () => backend.signOutUser() });
   return items;
 }
@@ -1484,24 +1541,11 @@ function openMenu(at, items) {
 
 function closeMenu() { $('#menu').hidden = true; }
 
-function showShortcuts() {
-  const k = KEY;
-  alert([
-    'Click: select · ' + (MAC ? '⌘' : 'Ctrl') + '-click: add to selection · Shift-click: select a range',
-    'Return: new task below · Shift-Return: new subtask',
-    'Click a selected name, double-click, or F2: rename',
-    'While typing a name: Return = next task · Return on an empty task = outdent/finish',
-    '   Tab / Shift-Tab = indent/outdent · ↑↓ = previous/next · Esc or click away = done (empty tasks vanish)',
-    'Description: ⌘B / ⌘I / ⌘U · "- " starts a bulleted list',
-    'Checkbox click: done · Shift-click (or hold on a phone): in progress',
-    'Space: done · Shift-Space: in progress (selected tasks)',
-    'Tab / Shift-Tab: indent / outdent',
-    `${k.mod}↑ / ${k.mod}↓: move up / down · ↑ ↓: select · Shift-↑↓: extend selection`,
-    '← / →: collapse / expand',
-    `${k.mod}C / ${k.mod}X / ${k.mod}V: copy / cut / paste · Delete: delete`,
-    `${k.mod}Z / ${k.shift}${k.mod}Z: undo / redo`,
-    'Drag rows to reorder; drop onto the middle of a row to move inside it.',
-  ].join('\n'));
+/** Instructions and keyboard shortcuts, in a window of their own so they can stay open beside the list. */
+function openHelp() {
+  const w = window.open('help.html', 'todo-help', 'popup,width=600,height=760');
+  if (!w) location.assign('help.html'); // pop-ups blocked: show it here instead
+  else w.focus();
 }
 
 // ---------------------------------------------------------------- keyboard
@@ -1529,6 +1573,10 @@ function onKeyDown(e) {
     return;
   }
   if (mod && k === 'Enter') { e.preventDefault(); newItem('task'); return; }
+  if (mod && lower === 'b' && !e.shiftKey && !e.altKey) {
+    if (selected.size) { e.preventDefault(); toggleBold(selectionTops()); }
+    return;
+  }
   if (mod && (k === 'ArrowUp' || k === 'ArrowDown')) { e.preventDefault(); moveSelection(k === 'ArrowUp' ? -1 : 1); return; }
   if (mod || e.altKey) return;
 
@@ -1576,6 +1624,10 @@ function onKeyDown(e) {
       selected.clear();
       render();
       break;
+    case '?':
+      e.preventDefault();
+      openHelp();
+      break;
   }
 }
 let pasteEventSeen = false;
@@ -1608,6 +1660,7 @@ function wireStaticUi() {
   tb('#tbRedo', redo);
   tb('#tbHistory', toggleHistory);
   tb('#tbJournal', () => toggleJournal());
+  tb('#tbHelp', openHelp);
   tb('#menuBtn', (e) => {
     if (!$('#menu').hidden && $('#menu').anchor === e.currentTarget) { closeMenu(); return; }
     openMenu(e.currentTarget, mainMenuItems());
